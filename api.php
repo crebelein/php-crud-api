@@ -2862,7 +2862,7 @@ class RecordController
         if (!$this->service->hasTable($table)) {
             return $this->responder->error(ErrorCode::TABLE_NOT_FOUND, $table);
         }
-        if ($this->service->getType($table) != 'table') {
+        if ($this->service->getType($table) != 'table' && $this->service->getType($table) != 'view') {
             return $this->responder->error(ErrorCode::OPERATION_NOT_SUPPORTED, __FUNCTION__);
         }
         $record = $request->getParsedBody();
@@ -2887,7 +2887,7 @@ class RecordController
         if (!$this->service->hasTable($table)) {
             return $this->responder->error(ErrorCode::TABLE_NOT_FOUND, $table);
         }
-        if ($this->service->getType($table) != 'table') {
+        if ($this->service->getType($table) != 'table' && $this->service->getType($table) != 'view') {
             return $this->responder->error(ErrorCode::OPERATION_NOT_SUPPORTED, __FUNCTION__);
         }
         $id = RequestUtils::getPathSegment($request, 3);
@@ -2920,7 +2920,7 @@ class RecordController
         if (!$this->service->hasTable($table)) {
             return $this->responder->error(ErrorCode::TABLE_NOT_FOUND, $table);
         }
-        if ($this->service->getType($table) != 'table') {
+        if ($this->service->getType($table) != 'table' && $this->service->getType($table) != 'view') {
             return $this->responder->error(ErrorCode::OPERATION_NOT_SUPPORTED, __FUNCTION__);
         }
         $id = RequestUtils::getPathSegment($request, 3);
@@ -4135,7 +4135,7 @@ class GenericReflection
     {
         switch ($this->driver) {
             case 'mysql':return 'SELECT "TABLE_NAME", "TABLE_TYPE" FROM "INFORMATION_SCHEMA"."TABLES" WHERE "TABLE_TYPE" IN (\'BASE TABLE\' , \'VIEW\') AND "TABLE_SCHEMA" = ? ORDER BY BINARY "TABLE_NAME"';
-            case 'pgsql':return 'SELECT c.relname as "TABLE_NAME", c.relkind as "TABLE_TYPE" FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind IN (\'r\', \'v\') AND n.nspname <> \'pg_catalog\' AND n.nspname <> \'information_schema\' AND n.nspname !~ \'^pg_toast\' AND pg_catalog.pg_table_is_visible(c.oid) AND \'\' <> ? ORDER BY "TABLE_NAME";';
+            case 'pgsql':return 'SELECT c.relname as "TABLE_NAME", c.relkind as "TABLE_TYPE" FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind IN (\'m\',\'r\', \'v\') AND n.nspname <> \'pg_catalog\' AND n.nspname <> \'information_schema\' AND n.nspname !~ \'^pg_toast\' AND pg_catalog.pg_table_is_visible(c.oid) AND \'\' <> ? ORDER BY "TABLE_NAME";';
             case 'sqlsrv':return 'SELECT o.name as "TABLE_NAME", o.xtype as "TABLE_TYPE" FROM sysobjects o WHERE o.xtype IN (\'U\', \'V\') ORDER BY "TABLE_NAME"';
         }
     }
@@ -4183,7 +4183,7 @@ class GenericReflection
                     $result['TABLE_TYPE'] = $map[$result['TABLE_TYPE']];
                     break;
                 case 'pgsql':
-                    $map = ['r' => 'table', 'v' => 'view'];
+                    $map = ['r' => 'table', 'v' => 'view', 'm' => 'materialized view'];
                     $result['TABLE_TYPE'] = $map[$result['TABLE_TYPE']];
                     break;
                 case 'sqlsrv':
